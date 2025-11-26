@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko"> <!-- 문서 언어를 한국어(ko)로 설정 -->
+<head>
+  <meta charset="UTF-8" /> <!-- 문자 인코딩: UTF-8 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> <!-- 모바일 환경 대응 -->
+  <title>Tetris</title> <!-- 브라우저 탭에 표시될 제목 -->
+  <link rel="stylesheet" href="style.css" /> <!-- 외부 CSS 파일 연결 -->
+  <style>
+     /* 메인 메뉴 스타일 */
+    #mainMenu {
+      margin: 20px; /* 바깥 여백 */
+      display: flex; /* Flexbox 사용 */
+      flex-direction: column; /* 세로 정렬 */
+      gap: 10px; /* 버튼 간격 */
+    }
+
+    #helpScreen { /* 도움말 화면 (처음엔 숨김) */
+      margin: 20px; /* 바깥 여백 */
+      display: none; /* 기본 숨김 */
+    }
+    /* 오버레이 스타일 */
+    #gameOverScreen {
+      position: absolute; /* 게임 화면 위에 고정 */
+      top: 0; /* 위쪽 붙임 */
+      left: 0; /* 왼쪽 붙임 */
+      width: 240px; /* 게임 화면 너비 */
+      height: 400px; /* 게임 화면 높이 */
+      background: rgba(0, 0, 0, 0.8); /* 반투명 검정 배경 */
+      display: none; /* 기본 숨김 */
+      z-index: 10; /* 다른 요소 위에 표시 */
+      color: white; /* 글자색 흰색 */
+      font-size: 20px; /* 글자 크기 */
+      
+      justify-content: center; /* Flexbox 수평 가운데 */
+      align-items: center; /* Flexbox 수직 가운데 */
+      flex-direction: column; /* Flexbox 세로 정렬 */
+    }
+
+    #gameOverMessage {
+      font-weight: bold; /* 굵은 글씨 */
+      font-size: 24px; /* 글자 크기 */
+      color: red; /* 글자색 빨강 */
+      margin-bottom: 20px; /* 아래쪽 여백 */
+    }
+
+    body {
+      display: flex; /* 전체를 Flexbox로 배치 */
+      flex-direction: column; /* 세로 배치 */
+      align-items: center; /* 가로 가운데 정렬 */
+      margin: 0; /* 브라우저 기본 여백 제거 */
+    }
+ /* 게임 영역과 넥스트 박스 감싸는 래퍼 */
+    #mainWrapper {
+      display: flex; /* 좌우 배치 */
+      gap: 10px; /* 사이 간격 */
+    }
+
+    #nextCanvas {
+      border: 2px solid #444; /* 테두리 */
+      background-color: #111; /* 배경 어두운 회색 */
+    }
+
+    /* 일시정지 오버레이 */
+    #pauseOverlay {
+      position: absolute; /* 게임 화면 위에 고정 */
+      top: 0; /* 위쪽 붙임 */
+      left: 0; /* 왼쪽 붙임 */
+      width: 240px; /* 게임 영역 너비 */
+      height: 400px; /* 게임 영역 높이 */
+      background-color: rgba(0, 0, 0, 0.6); /* 반투명 검정 배경 */
+      z-index: 11; /* 게임 오버보다 위 */
+      
+      justify-content: center; /* 수평 가운데 정렬 */
+      align-items: center; /* 수직 가운데 정렬 */
+    }
+
+    .pauseText {
+      font-size: 3rem; /* 글자 크기 크게 */
+      color: white; /* 글자색 흰색 */
+      font-weight: bold; /* 두껍게 */
+      text-shadow: 2px 2px 4px #000;/* 그림자 효과 */
+    }
+  </style>
+</head>
+<body>
+  <h1>Tetris</h1> <!-- 게임 제목 -->
+
+  <!-- 메인 메뉴 -->
+  <div id="mainMenu">
+    <button id="playBtn">▶ 플레이</button> <!-- 시작 버튼 -->
+    <button id="helpBtn">❔ 도움말</button> <!-- 도움말 버튼 -->
+  </div>
+
+  <!-- 도움말 화면 -->
+  <div id="helpScreen" style="display: none;">
+    <h2>게임 방법</h2>
+    <p>← → : 블록 이동</p>
+    <p>↑ : 블록 회전</p>
+    <p>↓ : 빠르게 내리기</p>
+    <p>Spacebar, h : 하드 드롭</p>
+    <p>r : 재시작</p>
+    <p>P : 일시정지</p>
+    <button id="backBtn">뒤로가기</button> <!-- 메인 메뉴로 돌아가기 -->
+  </div>
+  <script src="game.js"></script> <!-- 게임 초기화 스크립트 -->
+  
+  <!-- 점수 표시 -->
+  <div id="score">점수: 0</div>
+
+  <!-- 게임 + 넥스트 박스 감싸는 래퍼 -->
+  <div id="mainWrapper">
+    <!-- 게임 영역 -->
+    <div id="gameContainer" style="position: relative; width: 240px; height: 400px;">
+      <canvas id="tetris" width="240" height="400"></canvas> <!-- 테트리스 캔버스 -->
+
+      <!-- 게임 오버 화면 -->
+      <div id="gameOverScreen">
+        <p id="gameOverMessage"></p> <!-- 최종 점수 표시 -->
+        <button onclick="restartGame()">다시 시작하기</button> <!-- 재시작 버튼 -->
+      </div>
+
+      <!-- 일시정지 오버레이 -->
+      <div id="pauseOverlay">
+        <div class="pauseText">일시정지</div> <!-- 일시정지 텍스트 -->
+      </div>
+    </div>
+
+    <!-- 넥스트 블록 미리보기 -->
+    <canvas id="nextCanvas" width="100" height="400"></canvas>
+  </div>
+
+  <script src="script.js"></script> <!-- 메인 게임 로직 -->
+</body>
+</html>

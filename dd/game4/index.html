@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Candy Match Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 시작 화면 -->
+    <div id="start-screen" class="screen">
+        <h1>🍬 Candy Match Game 🍬</h1>
+        <button id="start-btn">게임 시작</button>
+    </div>
+
+    <!-- 게임 화면 -->
+<div id="game-screen" class="hidden">
+    <div id="score-text">점수: 0</div>
+    <div id="time-text">시간: 3:00</div>
+    <div id="board"></div>
+    </div>
+
+    <!-- 게임 오버 화면 -->
+<div id="end-screen" class="hidden">
+    <h2>게임 종료</h2>
+    <p id="final-score">점수: 0</p>
+    <ol id="ranking-list"></ol> <!-- 순위 표시 -->
+    <button id="restart-btn">다시 시작</button>
+</div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

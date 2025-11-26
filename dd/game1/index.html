@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>오목 AI 대전 (오목)</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "맑은 고딕", sans-serif;
+    margin-top: 20px;
+  }
+  #opening {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #opening h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+  }
+  #startBtn {
+    font-size: 20px;
+    padding: 10px 25px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #654321;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  #startBtn:hover {
+    background-color: #a0522d;
+  }
+  #gameContainer {
+    display: none; /* 시작 전엔 숨김 */
+    flex-direction: column;
+    align-items: center;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(15, 30px);
+    grid-template-rows: repeat(15, 30px);
+    gap: 1px;
+    background: #deb887;
+    border: 2px solid #654321;
+    margin-top: 20px;
+  }
+  .cell {
+    width: 30px;
+    height: 30px;
+    background: #f5deb3;
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+  }
+  .cell:hover {
+    background: #f0d9b5;
+  }
+  .stone {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+  }
+  .black {
+    background: black;
+  }
+  .white {
+    background: white;
+    border: 1px solid black;
+  }
+  #status {
+    margin-top: 15px;
+    font-weight: bold;
+  }
+  #timer {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 18px;
+    color: #b22222;
+  }
+  #restart {
+    margin-top: 10px;
+    padding: 5px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid #654321;
+    background-color: #f0d9b5;
+    transition: background-color 0.3s ease;
+  }
+  #restart:hover {
+    background-color: #deb887;
+  }
+</style>
+</head>
+<body>
+
+  <!-- 오프닝 화면 -->
+  <div id="opening">
+    <h1>오목 AI 대전</h1>
+    <button id="startBtn">시작하기</button>
+  </div>
+
+  <!-- 게임 UI 감싸는 컨테이너 -->
+  <div id="gameContainer">
+    <div id="board"></div>
+    <div id="status">당신(흑돌) 차례입니다.</div>
+    <div id="timer">남은 시간: 20초</div>
+    <button id="restart">다시 시작</button>
+  </div>
+
+<script>
+  const boardSize = 15;
+  const opening = document.getElementById('opening');
+  const startBtn = document.getElementById('startBtn');
+  const gameContainer = document.getElementById('gameContainer');
+  const boardElement = document.getElementById('board');
+  const statusElement = document.getElementById('status');
+  const timerElement = document.getElementById('timer');
+  const restartBtn = document.getElementById('restart');
+
+  let board = Array.from({length: boardSize}, () => Array(boardSize).fill(0));
+  let gameEnded = false;
+
+  const directions = [
+    [0,1], [1,0], [1,1], [1,-1]
+  ];
+
+  const TIME_LIMIT = 20; // 20초 제한
+  let timeLeft = TIME_LIMIT;
+  let timerInterval = null;
+
+  // 보드 생성
+  function createBoard() {
+    boardElement.innerHTML = '';
+    for(let i=0; i<boardSize; i++) {
+      for(let j=0; j<boardSize; j++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.row = i;
+        cell.dataset.col = j;
+        cell.addEventListener('click', onCellClick);
+        boardElement.appendChild(cell);
+      }
+    }
+  }
+
+  // 돌 그리기
+  function drawStone(row, col, color) {
+    const idx = row * boardSize + col;
+    const cell = boardElement.children[idx];
+    cell.innerHTML = '';
+    if(color !== 0){
+      const stone = document.createElement('div');
+      stone.classList.add('stone');
+      stone.classList.add(color === 1 ? 'black' : 'white');
+      cell.appendChild(stone);
+    }
+  }
+
+  function renderBoard() {
+    for(let i=0; i<boardSize; i++) {
+      for(let j=0; j<boardSize; j++) {
+        drawStone(i,j,board[i][j]);
+      }
+    }
+  }
+
+  function isInside(x,y){
+    return x>=0 && y>=0 && x<boardSize && y<boardSize;
+  }
+
+  function checkWin(row, col, color) {
+    for(let [dx, dy] of directions){
+      let count = 1;
+      let x = row + dx, y = col + dy;
+      while(isInside(x,y) && board[x][y] === color){
+        count++; x += dx; y += dy;
+      }
+      x = row - dx; y = col - dy;
+      while(isInside(x,y) && board[x][y] === color){
+        count++; x -= dx; y -= dy;
+      }
+      if(count >= 5) return true;
+    }
+    return false;
+  }
+
+  function getCandidatePositions(board){
+    const result = new Set();
+    for(let i=0; i<boardSize; i++){
+      for(let j=0; j<boardSize; j++){
+        if(board[i][j] !== 0){
+          for(let dx=-2; dx<=2; dx++){
+            for(let dy=-2; dy<=2; dy++){
+              const nx = i+dx;
+              const ny = j+dy;
+              if(isInside(nx,ny) && board[nx][ny] === 0){
+                result.add(nx + "," + ny);
+              }
+            }
+          }
+        }
+      }
+    }
+    if(result.size === 0){
+      result.add(Math.floor(boardSize/2) + "," + Math.floor(boardSize/2));
+    }
+    return [...result].map(s => s.split(",").map(Number));
+  }
+
+  const MAX_DEPTH = 2;
+
+  function minimax(board, depth, isMaximizing, alpha, beta){
+    if(depth === 0){
+      return evaluateBoard(board);
+    }
+
+    const candidates = getCandidatePositions(board);
+    if(candidates.length === 0) return 0;
+
+    if(isMaximizing){
+      let maxEval = -Infinity;
+      for(const [x,y] of candidates){
+        board[x][y] = 2;
+        if(checkWin(x,y,2)){
+          board[x][y] = 0;
+          return 1000000 + depth * 1000;
+        }
+        let evalScore = minimax(board, depth -1, false, alpha, beta);
+        board[x][y] = 0;
+        maxEval = Math.max(maxEval, evalScore);
+        alpha = Math.max(alpha, evalScore);
+        if(beta <= alpha) break;
+      }
+      return maxEval;
+    } else {
+      let minEval = Infinity;
+      for(const [x,y] of candidates){
+        board[x][y] = 1;
+        if(checkWin(x,y,1)){
+          board[x][y] = 0;
+          return -1000000 - depth * 1000;
+        }
+        let evalScore = minimax(board, depth -1, true, alpha, beta);
+        board[x][y] = 0;
+        minEval = Math.min(minEval, evalScore);
+        beta = Math.min(beta, evalScore);
+        if(beta <= alpha) break;
+      }
+      return minEval;
+    }
+  }
+
+  function getBestMove(board){
+    let bestScore = -Infinity;
+    let move = [-1,-1];
+    const candidates = getCandidatePositions(board);
+
+    for(const [x,y] of candidates){
+      board[x][y] = 2;
+      let score = minimax(board, MAX_DEPTH - 1, false, -Infinity, Infinity);
+      board[x][y] = 0;
+      if(score > bestScore){
+        bestScore = score;
+        move = [x,y];
+      }
+    }
+    return move;
+  }
+
+  function evaluateBoard(board){
+    let score = 0;
+    for(let i=0; i<boardSize; i++){
+      for(let j=0; j<boardSize; j++){
+        if(board[i][j] === 2){
+          score += evaluatePosition(i,j,2,board) * 1.2;
+        } else if(board[i][j] === 1){
+          score -= evaluatePosition(i,j,1,board) * 1.5;
+        }
+      }
+    }
+    return score;
+  }
+
+  function evaluatePosition(x,y,color,board){
+    let totalScore = 0;
+    for(const [dx,dy] of directions){
+      let count = 1;
+      let blocks = 0;
+
+      let i = x + dx;
+      let j = y + dy;
+      while(isInside(i,j) && board[i][j] === color){
+        count++;
+        i += dx; j += dy;
+      }
+      if(!isInside(i,j) || board[i][j] !== 0) blocks++;
+
+      i = x - dx;
+      j = y - dy;
+      while(isInside(i,j) && board[i][j] === color){
+        count++;
+        i -= dx; j -= dy;
+      }
+      if(!isInside(i,j) || board[i][j] !== 0) blocks++;
+
+      totalScore += getAdvancedLineScore(count, blocks, color);
+    }
+    return totalScore;
+  }
+
+  function getAdvancedLineScore(count, blocks, color){
+    if(count >= 5) return 100000;
+    if(count === 4){
+      if(blocks === 0) return color === 2 ? 50000 : 40000;
+      if(blocks === 1) return color === 2 ? 10000 : 9000;
+    }
+    if(count === 3){
+      if(blocks === 0) return color === 2 ? 10000 : 8000;
+      if(blocks === 1) return color === 2 ? 1000 : 900;
+    }
+    if(count === 2){
+      if(blocks === 0) return color === 2 ? 500 : 400;
+      if(blocks === 1) return color === 2 ? 100 : 90;
+    }
+    if(count === 1){
+      return color === 2 ? 50 : 40;
+    }
+    return 0;
+  }
+
+  // --- 시간 제한 타이머 ---
+
+  function startTimer(){
+    timeLeft = TIME_LIMIT;
+    updateTimerDisplay();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if(gameEnded){
+        clearInterval(timerInterval);
+        return;
+      }
+      timeLeft--;
+      updateTimerDisplay();
+      if(timeLeft <= 0){
+        clearInterval(timerInterval);
+        statusElement.textContent = "시간 초과! 당신(흑돌) 패배!";
+        gameEnded = true;
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay(){
+    timerElement.textContent = `남은 시간: ${timeLeft}초`;
+  }
+
+  // 플레이어 클릭 처리
+  function onCellClick(e){
+    if(gameEnded) return;
+    const row = +e.target.dataset.row;
+    const col = +e.target.dataset.col;
+    if(board[row][col] !== 0) return;
+
+    board[row][col] = 1; // 플레이어 돌 놓기
+    renderBoard();
+
+    clearInterval(timerInterval);
+    if(checkWin(row,col,1)){
+      statusElement.textContent = "당신(흑돌) 승리!";
+      gameEnded = true;
+      return;
+    }
+
+    statusElement.textContent = "AI(백돌) 차례입니다.";
+
+    setTimeout(() => {
+      if(gameEnded) return;
+      const [aiX, aiY] = getBestMove(board);
+      if(aiX === -1 && aiY === -1){
+        statusElement.textContent = "무승부입니다.";
+        gameEnded = true;
+        return;
+      }
+      board[aiX][aiY] = 2;
+      renderBoard();
+
+      if(checkWin(aiX, aiY, 2)){
+        statusElement.textContent = "AI(백돌) 승리!";
+        gameEnded = true;
+        return;
+      }
+
+      statusElement.textContent = "당신(흑돌) 차례입니다.";
+      startTimer();
+    }, 300);
+  }
+
+  restartBtn.addEventListener('click', () => {
+    board = Array.from({length: boardSize}, () => Array(boardSize).fill(0));
+    gameEnded = false;
+    statusElement.textContent = "당신(흑돌) 차례입니다.";
+    createBoard();
+    renderBoard();
+    startTimer();
+  });
+
+  startBtn.addEventListener('click', () => {
+    opening.style.display = 'none';
+    gameContainer.style.display = 'flex';
+    board = Array.from({length: boardSize}, () => Array(boardSize).fill(0));
+    gameEnded = false;
+    statusElement.textContent = "당신(흑돌) 차례입니다.";
+    createBoard();
+    renderBoard();
+    startTimer();
+  });
+
+</script>
+</body>
+</html>

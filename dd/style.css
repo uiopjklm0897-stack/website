@@ -1,0 +1,256 @@
+/* 기본 스타일 */
+body {
+    background-color: rgb(255, 253, 242);
+    height: 100%;
+}
+
+h1 {
+    font-size: 150px;
+    position: relative;
+    top:30px;
+    text-align:center;
+    z-index:1;
+    color: rgb(255, 253, 242);
+}
+
+.subtitle {
+    display: flex;
+    justify-content: center;
+}
+
+a {
+    font-size: 7px;
+    text-decoration: none;
+    color: rgb(35, 36, 44);
+}
+
+/* 네비게이션 */
+.nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    height: 50px;
+
+}
+
+.nav-item1-desc, .nav-item2-desc, .nav-item3-desc {
+    opacity:0;
+}
+
+.nav-item1,
+.nav-item3 {
+    background-color: rgb(105, 174, 203);
+    flex-grow: 1;
+    height: 30px;
+    font-weight: bold;
+    position:relative;
+    transition: height 0.3s ease;
+    overflow: hidden;
+    width:200px;
+}
+
+#closeBtn {
+    border:none;
+    font-weight:bold;
+    background-color: rgb(24, 79, 102);
+    color: rgb(255, 253, 242);
+    cursor: pointer;
+}
+
+.nav-item2,
+.nav-item4 {
+    background-color: rgb(24, 79, 102);
+    flex-grow: 1;
+    height: 30px;
+    font-weight: bold;
+    position:relative;
+    transition: height 0.3s ease;
+    overflow: hidden;
+    color: rgb(255, 253, 242);
+    width:200px;
+}
+
+.nav-item1:hover, .nav-item2:hover, .nav-item3:hover {
+    height:400px;
+    z-index: 999;
+}
+
+.nav-item1:hover .nav-item1-desc {
+    opacity:1;
+}
+
+.nav-item2:hover .nav-item2-desc {
+    opacity:1;
+}
+
+.nav-item3:hover .nav-item3-desc {
+    opacity:1;
+}
+
+
+
+/* 게임 버튼 공통 스타일 */
+.game1-button, .game2-button, .game3-button, .game4-button, .game5-button {
+    opacity: 0;
+    transition: 0.3s;
+    width: 40px;
+    height: 15px;
+    background-color: rgb(255, 253, 242);
+    border-radius: 10%;
+    border: none;
+    font-weight: bold;
+}
+
+.game {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    margin-top: 200px;
+    overflow:visible;
+}
+
+.game1, .game2, .game3, .game4, .game5 {
+    position: relative;
+    width: 200px;
+    height: 150px;
+    font-size: 35px;
+    font-weight: bold;
+    background-color: rgb(15, 62, 87);
+    border-radius: 10%;
+    cursor: pointer;
+    border: none;
+    transition: 0.3s;
+    color: rgb(255, 253, 242);
+    box-sizing: border-box;
+    transform-origin: bottom center;
+    top: 200px;
+    text-align: center;
+}
+
+/* 개별 버튼 위치 */
+
+
+/* 버튼 포커스 제거 */
+button:focus {
+    outline: 0;
+}
+
+/* 게임 버튼 hover 효과 */
+.game2:hover, .game3:hover, .game4:hover{
+    transform: scale(3.5);
+    background: rgb(53, 146, 196);
+    transition: transform 0.3s ease, background 0.3s;
+    z-index: 999;
+    border-radius: 5%;
+    font-size: 15px;
+}
+
+.game1:hover {
+    transform: scale(3.5);
+    background: rgb(53, 146, 196);
+    transition: transform 0.3s ease, background 0.3s;
+    z-index: 999;
+    transform-origin: 20% bottom;
+    border-radius: 5%;
+    font-size: 15px;
+}
+
+.game5:hover {
+    transform: scale(3.5);
+    background: rgb(53, 146, 196);
+    transition: transform 0.3s ease, background 0.3s;
+    z-index: 999;
+    transform-origin: 80% bottom;
+    border-radius: 5%;
+    font-size: 15px;
+}
+
+.game1:hover .game1-desc,
+.game1:hover .game1-button {
+    opacity:1;
+}
+
+.game2:hover .game2-desc,
+.game2:hover .game2-button {
+    opacity:1;
+}
+
+.game3:hover .game3-desc,
+.game3:hover .game3-button{
+    opacity:1;
+}
+
+.game4:hover .game4-desc,
+.game4:hover .game4-button {
+    opacity:1;
+}
+
+.game5:hover .game5-desc,
+.game5:hover .game5-button {
+    opacity:1;
+}
+
+
+.game1-desc, .game2-desc, .game3-desc, .game4-desc {
+    width: 100%;
+    height:80%;
+    background-color:rgb(255, 253, 242);
+    opacity: 0;
+    transition: 0.3s;
+    color:black;
+    font-size:10px;
+}
+
+.game5-desc {
+    width: 100%;
+    height:80%;
+    background-color:rgb(255, 253, 242);
+    opacity: 0;
+    transition: 0.3s;
+    color:black;
+    font-size:9px;
+}
+
+/* 게임 설명 박스 */
+.game-box {
+    position: absolute;
+    top: 59.5%;
+    right: 70%;
+    width: 200px;
+    height: 150px;
+    font-size: 50px;
+    background-color: blue;
+    border-radius: 10%;
+    cursor: pointer;
+    border: none;
+    color: white;
+}
+
+.box {
+    width: 100%;
+    height: 400px;
+    margin-top: -380px;
+    background-color: lightblue;
+
+    
+}
+
+.background-img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    z-index: 9999;
+}
+
+.box2 {
+    width: 100%;
+    height: 10px;
+    background-color:rgb(13, 3, 21);
+}
+
+.box3 {
+    width: 100%;
+    height: 10px;
+    background-color:rgb(24, 79, 102);
+    margin-top: 50px;
+}
